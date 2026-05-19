@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脳体コンダクター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #D9EEF5;
+    --card: #FAFAF8;
+    --cta: #FAEEA0;
+    --cta-hover: #F5D660;
+    --text: #6B4226;
+    --text-sub: #6B4E30;
+    --accent: #72C8E0;
+    --accent-hover: #4FAEC8;
+    --btn-hover: #B0D8E6;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(107,66,38,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-top: 8px;
+  }
+
+  header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+
+  header p {
+    font-size: 0.78rem;
+    color: var(--text-sub);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px 20px;
+    max-width: 480px;
+    margin: 0 auto 20px;
+  }
+
+  .step-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent-hover);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .question {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    background: var(--bg);
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+    user-select: none;
+  }
+
+  .tag:hover {
+    background: var(--btn-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .tag.selected {
+    background: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--card);
+  }
+
+  .mood-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mood-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .mood-btn:hover {
+    background: var(--btn-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .mood-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--card);
+  }
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 20px;
+    background: var(--cta);
+    border: none;
+    border-radius: 999px;
+    padding: 18px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.18s, transform 0.12s;
+    box-shadow: 0 2px 12px rgba(107,66,38,0.13);
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    background: var(--cta-hover);
+    transform: translateY(-1px);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* 結果エリア */
+  #result-area {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .result-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px 24px;
+    text-align: center;
+    border-top: 4px solid var(--accent);
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent-hover);
+    margin-bottom: 10px;
+  }
+
+  .result-item {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    line-height: 1.3;
+  }
+
+  .result-message {
+    font-size: 0.92rem;
+    color: var(--text-sub);
+    line-height: 1.75;
+    margin-bottom: 28px;
+    min-height: 3em;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  .retry-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    padding: 13px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+
+  .retry-btn:hover {
+    background: var(--btn-hover);
+  }
+
+  .share-btn {
+    background: var(--cta);
+    border: none;
+    border-radius: 999px;
+    padding: 13px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+
+  .share-btn:hover {
+    background: var(--cta-hover);
+  }
+
+  /* 広告エリア */
+  #ad-area {
+    max-width: 480px;
+    margin: 20px auto 0;
+    text-align: center;
+    min-height: 60px;
+  }
+
+  .ad-label {
+    font-size: 0.65rem;
+    color: var(--text-sub);
+    opacity: 0.5;
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ローディング */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 32px;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+  }
+
+  .loading.show { display: block; }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-msg {
+    display: none;
+    background: #fff0f0;
+    border: 1px solid #f5c0c0;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: #a04040;
+    max-width: 480px;
+    margin: 0 auto 16px;
+    text-align: center;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--text-sub);
+    opacity: 0.5;
+    margin-top: 40px;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>脳体コンダクター</h1>
+  <p>今日の脳と体に、ちょうどいいものを</p>
+</header>
+
+<!-- Step1 -->
+<div class="card" id="step1-card">
+  <div class="step-label">Step 1</div>
+  <div class="question">気になるワードを選んでください<br><span style="font-size:0.78rem;font-weight:400;color:var(--text-sub)">複数選択できます</span></div>
+  <div class="tags" id="tags-container">
+    <span class="tag" data-word="眠い">眠い</span>
+    <span class="tag" data-word="だるい">だるい</span>
+    <span class="tag" data-word="頭重い">頭重い</span>
+    <span class="tag" data-word="集中力">集中力</span>
+    <span class="tag" data-word="やる気">やる気</span>
+    <span class="tag" data-word="不安">不安</span>
+    <span class="tag" data-word="イライラ">イライラ</span>
+    <span class="tag" data-word="食べすぎ">食べすぎ</span>
+    <span class="tag" data-word="食欲ない">食欲ない</span>
+    <span class="tag" data-word="何かの本番">何かの本番</span>
+    <span class="tag" data-word="美肌">美肌</span>
+    <span class="tag" data-word="デート">デート</span>
+    <span class="tag" data-word="特になし">特になし</span>
+  </div>
+</div>
+
+<!-- Step2 -->
+<div class="card">
+  <div class="step-label">Step 2</div>
+  <div class="question">今日の気分は？</div>
+  <div class="mood-grid" id="mood-container">
+    <button class="mood-btn" data-mood="a" data-label="元気に活動">元気に<br>活動したい</button>
+    <button class="mood-btn" data-mood="b" data-label="なんとか乗り切る">なんとか<br>乗り切る</button>
+    <button class="mood-btn" data-mood="c" data-label="のんびり過ごす">のんびり<br>過ごす</button>
+    <button class="mood-btn" data-mood="d" data-label="明日に備えて温存">明日に備えて<br>温存</button>
+  </div>
+</div>
+
+<button class="submit-btn" id="submit-btn" disabled>今日のアイテムを見る</button>
+
+<!-- ローディング -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  あなたにぴったりを探しています…
+</div>
+
+<!-- エラー -->
+<div class="error-msg" id="error-msg"></div>
+
+<!-- 結果 -->
+<div id="result-area">
+  <div class="result-card">
+    <div class="result-label">TODAY'S BOOST ITEM</div>
+    <div class="result-item" id="result-item">—</div>
+    <div class="result-message" id="result-message"></div>
+    <div class="result-actions">
+      <button class="share-btn" id="share-btn">シェアする</button>
+      <button class="retry-btn" id="retry-btn">別のアイテムを見る</button>
+      <button class="retry-btn" id="reset-btn" style="border-color:var(--text-sub);color:var(--text-sub);font-weight:400">最初からやり直す</button>
+    </div>
+  </div>
+
+  <!-- 広告エリア -->
+  <div id="ad-area">
+    <div class="ad-label">AD</div>
+    <!-- 広告タグをここに挿入 -->
+  </div>
+</div>
+
+<footer>© 脳体コンダクター</footer>
+
+<script>
+// ============================================================
+// スプレッドシートURL（公開CSV形式）
+// ============================================================
+const FOOD_CSV_URL  = 'https://docs.google.com/spreadsheets/d/1SwGE9tfrEvpLog4ZNuiLXkvCIXLd82fdvmIxG0YTq6A/export?format=csv&gid=0';
+const MSG_CSV_URL   = 'https://docs.google.com/spreadsheets/d/18NgHffNkoIz4XYb9brJNawMtgmVUAWXjMuPzTrvVMDw/export?format=csv&gid=0';
+
+// ============================================================
+// ワード→クラスタ加点表
+// クラスタ順: A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7
+// ============================================================
+const WORD_SCORES = {
+  '眠い':       [2,1,0,3,0,0,1,0],
+  'だるい':     [1,1,0,1,0,1,3,0],
+  '頭重い':     [2,2,0,1,0,1,2,0],
+  '集中力':     [3,2,0,0,1,0,1,0],
+  'やる気':     [3,1,1,1,0,0,1,0],
+  '不安':       [0,0,2,1,3,0,1,0],
+  'イライラ':   [0,2,3,0,2,0,0,0],
+  '食べすぎ':   [0,3,1,0,1,1,0,0],
+  '食欲ない':   [1,0,1,0,0,3,2,0],
+  '何かの本番': [3,1,1,0,2,0,0,0],
+  '美肌':       [0,0,0,0,0,2,1,3],
+  'デート':     [2,0,1,1,2,0,0,2],
+  '特になし':   [0,0,0,0,0,0,0,3],
+};
+
+// ============================================================
+// 状態
+// ============================================================
+let selectedWords = new Set();
+let selectedMood  = null;
+let foodData      = null;
+let msgData       = null;
+let lastItemName  = null;
+
+// ============================================================
+// CSV パース
+// ============================================================
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = splitCSVLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = splitCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ============================================================
+// データ取得
+// ============================================================
+async function fetchData() {
+  const [fRes, mRes] = await Promise.all([
+    fetch(FOOD_CSV_URL),
+    fetch(MSG_CSV_URL),
+  ]);
+  if (!fRes.ok || !mRes.ok) throw new Error('データの取得に失敗しました');
+  const [fText, mText] = await Promise.all([fRes.text(), mRes.text()]);
+  foodData = parseCSV(fText);
+  msgData  = parseCSV(mText);
+}
+
+// ============================================================
+// ロジック：クラスタスコア計算
+// ============================================================
+function calcClusterScores(words) {
+  const scores = [0,0,0,0,0,0,0,0];
+  words.forEach(w => {
+    const pts = WORD_SCORES[w];
+    if (pts) pts.forEach((p, i) => { scores[i] += p; });
+  });
+  return scores;
+}
+
+// 最高スコアのクラスタを返す（タイブレーク：A優先=index小さい方優先）
+function topCluster(scores) {
+  let maxVal = -1, maxIdx = 0;
+  scores.forEach((s, i) => { if (s > maxVal) { maxVal = s; maxIdx = i; } });
+  return maxIdx; // 0=A, 1=B, ...
+}
+
+const CLUSTER_KEYS = ['A_睡眠','B_血糖','C_疲労','D_腸内','E_セロトニン','F_覚醒集中','G_GABA','H_抗酸化'];
+
+// ============================================================
+// 食材選択
+// ============================================================
+function pickFood(words, excludeName) {
+  const scores = calcClusterScores(words);
+  const topIdx = topCluster(scores);
+  const key    = CLUSTER_KEYS[topIdx];
+
+  // CV=✓ かつ 主クラスタスコア>=2 の食材を候補にする
+  const candidates = foodData.filter(row => {
+    if (row['CV'] !== '✓') return false;
+    const val = parseInt(row[key], 10);
+    return !isNaN(val) && val >= 2;
+  });
+
+  if (!candidates.length) return null;
+
+  // 引き直し：直前と違うものを優先
+  const pool = candidates.filter(r => r['食材'] !== excludeName);
+  const pick = pool.length ? pool : candidates;
+
+  // スコア降順でソートしてトップ3からランダム
+  pick.sort((a, b) => parseInt(b[key],10) - parseInt(a[key],10));
+  const top = pick.slice(0, Math.min(3, pick.length));
+  return top[Math.floor(Math.random() * top.length)];
+}
+
+// ============================================================
+// メッセージ選択
+// ============================================================
+function pickMessage(moodKey, excludeNo) {
+  const pool = msgData.filter(row => row['気分区分記号'] === moodKey && row['no.'] !== excludeNo);
+  if (!pool.length) return '';
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  lastMsgNo = pick['no.'];
+  return pick['メッセージ'];
+}
+
+let lastMsgNo = null;
+
+// ============================================================
+// 結果表示
+// ============================================================
+async function showResult(isRetry = false) {
+  const submitBtn = document.getElementById('submit-btn');
+  const loading   = document.getElementById('loading');
+  const errorMsg  = document.getElementById('error-msg');
+  const resultArea = document.getElementById('result-area');
+
+  errorMsg.style.display = 'none';
+
+  if (!foodData || !msgData) {
+    submitBtn.style.display = 'none';
+    loading.classList.add('show');
+    try {
+      await fetchData();
+    } catch(e) {
+      loading.classList.remove('show');
+      submitBtn.style.display = 'block';
+      errorMsg.textContent = 'データの読み込みに失敗しました。時間をおいて再度お試しください。';
+      errorMsg.style.display = 'block';
+      return;
+    }
+    loading.classList.remove('show');
+  }
+
+  const words = selectedWords.size ? [...selectedWords] : ['特になし'];
+  const food  = pickFood(words, isRetry ? lastItemName : null);
+
+  if (!food) {
+    errorMsg.textContent = '該当する食材が見つかりませんでした。';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  lastItemName = food['食材'];
+  const message = pickMessage(selectedMood, isRetry ? lastMsgNo : null);
+
+  document.getElementById('result-item').textContent    = food['食材'];
+  document.getElementById('result-message').textContent = message;
+
+  submitBtn.style.display  = 'none';
+  resultArea.style.display = 'block';
+  resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================================
+// イベント
+// ============================================================
+document.getElementById('tags-container').addEventListener('click', e => {
+  const tag = e.target.closest('.tag');
+  if (!tag) return;
+  const word = tag.dataset.word;
+  if (selectedWords.has(word)) { selectedWords.delete(word); tag.classList.remove('selected'); }
+  else                          { selectedWords.add(word);    tag.classList.add('selected'); }
+  updateSubmitBtn();
+});
+
+document.getElementById('mood-container').addEventListener('click', e => {
+  const btn = e.target.closest('.mood-btn');
+  if (!btn) return;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMood = btn.dataset.mood;
+  updateSubmitBtn();
+});
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = !selectedMood;
+}
+
+document.getElementById('submit-btn').addEventListener('click', () => showResult(false));
+document.getElementById('retry-btn').addEventListener('click', () => showResult(true));
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  selectedWords.clear();
+  selectedMood  = null;
+  lastItemName  = null;
+  lastMsgNo     = null;
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('submit-btn').style.display  = 'block';
+  document.getElementById('submit-btn').disabled       = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// シェア
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const item    = document.getElementById('result-item').textContent;
+  const message = document.getElementById('result-message').textContent;
+  const text    = `今日のブーストアイテムは「${item}」\n${message}\n\n#脳体コンダクター`;
+
+  if (navigator.share) {
+    try { await navigator.share({ text }); } catch(e) { /* キャンセル */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('テキストをコピーしました！');
+    } catch(e) {
+      alert(text);
+    }
+  }
+});
+</script>
+</body>
+</html>
