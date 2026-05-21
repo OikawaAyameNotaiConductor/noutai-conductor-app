@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>脳体コンダクター</title>
+<title>ブーストアイテムチェッカー｜脳体コンダクター</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
@@ -322,8 +322,9 @@
 <body>
 
 <header>
-  <h1>脳体コンダクター</h1>
-  <p>今日の脳と体に、ちょうどいいものを</p>
+  <h1>ブーストアイテムチェッカー</h1>
+  <p>今日食べるといいことあるかも！</p>
+  <p style="font-size:0.7rem;margin-top:4px;opacity:0.6">by 脳体コンダクター</p>
 </header>
 
 <!-- Step1 -->
@@ -377,7 +378,8 @@
     <div class="result-item" id="result-item">—</div>
     <div class="result-message" id="result-message"></div>
     <div class="result-actions">
-      <button class="share-btn" id="share-btn">シェアする</button>
+      <button class="share-btn" id="share-x-btn">𝕏 でシェアする</button>
+      <button class="share-btn" id="share-btn" style="background:var(--bg);border:1.5px solid var(--accent);color:var(--text);font-weight:700">その他シェア／コピー</button>
       <button class="retry-btn" id="retry-btn">別のアイテムを見る</button>
       <button class="retry-btn" id="reset-btn" style="border-color:var(--text-sub);color:var(--text-sub);font-weight:400">最初からやり直す</button>
     </div>
@@ -390,7 +392,7 @@
   </div>
 </div>
 
-<footer>© 脳体コンダクター</footer>
+<footer>© 脳体コンダクター｜笈川采女</footer>
 
 <script>
 // ============================================================
@@ -618,11 +620,33 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// シェア
+// シェアURL生成（気分別OGP・ランダムパターン）
+function buildShareUrl(mood) {
+  const patternCount = 1; // 後で2に変えるだけ
+  const pattern = Math.floor(Math.random() * patternCount) + 1;
+  return `https://noutai-conductor-app.vercel.app/mood/${mood}-${pattern}`;
+}
+
+// シェアテキスト生成
+function buildShareText(item, message, mood) {
+  const url = buildShareUrl(mood);
+  return `あなたの今日のブーストアイテムは【${item}】！\n${message}\n\nみんなもやってみて！\n${url}\n#ブーストアイテムチェッカー #脳体コンダクター`;
+}
+
+// X（Twitter）シェア
+document.getElementById('share-x-btn').addEventListener('click', () => {
+  const item    = document.getElementById('result-item').textContent;
+  const message = document.getElementById('result-message').textContent;
+  const text    = buildShareText(item, message, selectedMood);
+  const url     = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
+});
+
+// その他シェア／コピー
 document.getElementById('share-btn').addEventListener('click', async () => {
   const item    = document.getElementById('result-item').textContent;
   const message = document.getElementById('result-message').textContent;
-  const text    = `今日のブーストアイテムは「${item}」\n${message}\n\n#脳体コンダクター`;
+  const text    = buildShareText(item, message, selectedMood);
 
   if (navigator.share) {
     try { await navigator.share({ text }); } catch(e) { /* キャンセル */ }
@@ -630,9 +654,7 @@ document.getElementById('share-btn').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(text);
       alert('テキストをコピーしました！');
-    } catch(e) {
-      alert(text);
-    }
+    } catch(e) { alert(text); }
   }
 });
 </script>
