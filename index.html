@@ -255,6 +255,33 @@
     background: var(--cta-hover);
   }
 
+  /* コピーエリア */
+  .copy-area {
+    margin-top: 20px;
+    text-align: left;
+  }
+
+  .copy-label {
+    font-size: 0.68rem;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .copy-textarea {
+    width: 100%;
+    border: 1.5px solid var(--accent);
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--bg);
+    resize: none;
+    line-height: 1.7;
+    height: 120px;
+  }
+
   /* 広告エリア */
   #ad-area {
     max-width: 480px;
@@ -379,8 +406,15 @@
     <div class="result-message" id="result-message"></div>
     <div class="result-actions">
       <button class="share-btn" id="share-btn">シェアしてりくちゃんを見る</button>
-<button class="retry-btn" id="retry-btn">別のアイテムを見る</button>
-<button class="retry-btn" id="reset-btn" style="border-color:var(--text-sub);color:var(--text-sub);font-weight:400">最初からやり直す</button>
+      <button class="retry-btn" id="retry-btn">別のアイテムを見る</button>
+      <button class="retry-btn" id="reset-btn" style="border-color:var(--text-sub);color:var(--text-sub);font-weight:400">最初からやり直す</button>
+    </div>
+
+    <!-- コピーエリア -->
+    <div class="copy-area">
+      <div class="copy-label">うまくシェアできないときはこちらをコピー</div>
+      <textarea class="copy-textarea" id="share-textarea" readonly onclick="this.select()"></textarea>
+      <button class="retry-btn" id="copy-btn" style="width:100%;margin-top:8px">テキストをコピーする</button>
     </div>
   </div>
 
@@ -482,11 +516,10 @@ function calcClusterScores(words) {
   return scores;
 }
 
-// 最高スコアのクラスタを返す（タイブレーク：A優先=index小さい方優先）
 function topCluster(scores) {
   let maxVal = -1, maxIdx = 0;
   scores.forEach((s, i) => { if (s > maxVal) { maxVal = s; maxIdx = i; } });
-  return maxIdx; // 0=A, 1=B, ...
+  return maxIdx;
 }
 
 const CLUSTER_KEYS = ['A_睡眠','B_血糖','C_疲労','D_腸内','E_セロトニン','F_覚醒集中','G_GABA','H_抗酸化'];
@@ -499,7 +532,6 @@ function pickFood(words, excludeName) {
   const topIdx = topCluster(scores);
   const key    = CLUSTER_KEYS[topIdx];
 
-  // CV=✓ かつ 主クラスタスコア>=2 の食材を候補にする
   const candidates = foodData.filter(row => {
     if (row['CV'] !== '✓') return false;
     const val = parseInt(row[key], 10);
@@ -508,11 +540,9 @@ function pickFood(words, excludeName) {
 
   if (!candidates.length) return null;
 
-  // 引き直し：直前と違うものを優先
   const pool = candidates.filter(r => r['食材'] !== excludeName);
   const pick = pool.length ? pool : candidates;
 
-  // スコア降順でソートしてトップ3からランダム
   pick.sort((a, b) => parseInt(b[key],10) - parseInt(a[key],10));
   const top = pick.slice(0, Math.min(3, pick.length));
   return top[Math.floor(Math.random() * top.length)];
@@ -521,6 +551,8 @@ function pickFood(words, excludeName) {
 // ============================================================
 // メッセージ選択
 // ============================================================
+let lastMsgNo = null;
+
 function pickMessage(moodKey, excludeNo) {
   const pool = msgData.filter(row => row['気分区分記号'] === moodKey && row['no.'] !== excludeNo);
   if (!pool.length) return '';
@@ -529,15 +561,27 @@ function pickMessage(moodKey, excludeNo) {
   return pick['メッセージ'];
 }
 
-let lastMsgNo = null;
+// ============================================================
+// シェアテキスト生成
+// ============================================================
+function buildShareUrl(mood) {
+  const patternCount = 1; // 後で2に変えるだけ
+  const pattern = Math.floor(Math.random() * patternCount) + 1;
+  return `https://noutai-conductor-app.vercel.app/mood/${mood}-${pattern}`;
+}
+
+function buildShareText(item, message, mood) {
+  const url = buildShareUrl(mood);
+  return `あなたの今日のブーストアイテムは【${item}】！\n${message}\n\nみんなもやってみて！\n${url}\n#ブーストアイテムチェッカー #脳体コンダクター`;
+}
 
 // ============================================================
 // 結果表示
 // ============================================================
 async function showResult(isRetry = false) {
-  const submitBtn = document.getElementById('submit-btn');
-  const loading   = document.getElementById('loading');
-  const errorMsg  = document.getElementById('error-msg');
+  const submitBtn  = document.getElementById('submit-btn');
+  const loading    = document.getElementById('loading');
+  const errorMsg   = document.getElementById('error-msg');
   const resultArea = document.getElementById('result-area');
 
   errorMsg.style.display = 'none';
@@ -571,6 +615,7 @@ async function showResult(isRetry = false) {
 
   document.getElementById('result-item').textContent    = food['食材'];
   document.getElementById('result-message').textContent = message;
+  document.getElementById('share-textarea').value       = buildShareText(food['食材'], message, selectedMood);
 
   submitBtn.style.display  = 'none';
   resultArea.style.display = 'block';
@@ -599,8 +644,7 @@ document.getElementById('mood-container').addEventListener('click', e => {
 });
 
 function updateSubmitBtn() {
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = !selectedMood;
+  document.getElementById('submit-btn').disabled = !selectedMood;
 }
 
 document.getElementById('submit-btn').addEventListener('click', () => showResult(false));
@@ -619,20 +663,7 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// シェアURL生成（気分別OGP・ランダムパターン）
-function buildShareUrl(mood) {
-  const patternCount = 1; // 後で2に変えるだけ
-  const pattern = Math.floor(Math.random() * patternCount) + 1;
-  return `https://noutai-conductor-app.vercel.app/mood/${mood}-${pattern}`;
-}
-
-// シェアテキスト生成
-function buildShareText(item, message, mood) {
-  const url = buildShareUrl(mood);
-  return `あなたの今日のブーストアイテムは【${item}】！\n${message}\n\nみんなもやってみて！\n${url}\n#ブーストアイテムチェッカー #脳体コンダクター`;
-}
-
-// シェア
+// シェアボタン
 document.getElementById('share-btn').addEventListener('click', async () => {
   const item    = document.getElementById('result-item').textContent;
   const message = document.getElementById('result-message').textContent;
@@ -645,6 +676,19 @@ document.getElementById('share-btn').addEventListener('click', async () => {
       await navigator.clipboard.writeText(text);
       alert('テキストをコピーしました！');
     } catch(e) { alert(text); }
+  }
+});
+
+// コピーボタン
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  const text = document.getElementById('share-textarea').value;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'コピーしました！';
+    setTimeout(() => { btn.textContent = 'テキストをコピーする'; }, 2000);
+  } catch(e) {
+    document.getElementById('share-textarea').select();
   }
 });
 </script>
