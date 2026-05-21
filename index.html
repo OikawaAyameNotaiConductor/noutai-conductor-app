@@ -378,9 +378,7 @@
     <div class="result-item" id="result-item">—</div>
     <div class="result-message" id="result-message"></div>
     <div class="result-actions">
-      <button class="share-btn" id="share-x-btn">𝕏 でシェアする</button>
-      <button class="share-btn" id="share-btn" style="background:var(--bg);border:1.5px solid var(--accent);color:var(--text);font-weight:700">その他シェア／コピー</button>
-      <button class="retry-btn" id="retry-btn">別のアイテムを見る</button>
+      <button class="share-btn" id="share-btn">シェアしてりくちゃんを見る</button>
       <button class="retry-btn" id="reset-btn" style="border-color:var(--text-sub);color:var(--text-sub);font-weight:400">最初からやり直す</button>
     </div>
   </div>
@@ -633,16 +631,7 @@ function buildShareText(item, message, mood) {
   return `あなたの今日のブーストアイテムは【${item}】！\n${message}\n\nみんなもやってみて！\n${url}\n#ブーストアイテムチェッカー #脳体コンダクター`;
 }
 
-// X（Twitter）シェア
-document.getElementById('share-x-btn').addEventListener('click', () => {
-  const item    = document.getElementById('result-item').textContent;
-  const message = document.getElementById('result-message').textContent;
-  const text    = buildShareText(item, message, selectedMood);
-  const url     = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-  window.open(url, '_blank');
-});
-
-// その他シェア／コピー
+// シェア
 document.getElementById('share-btn').addEventListener('click', async () => {
   const item    = document.getElementById('result-item').textContent;
   const message = document.getElementById('result-message').textContent;
